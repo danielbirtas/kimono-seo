@@ -1,0 +1,1308 @@
+// Kimono SEO — Standalone Platform
+// Prisma Schema — SEO Engine + Auth
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS — Platform & Roles
+// ============================================
+enum Platform {
+  SHOPIFY
+  WOOCOMMERCE
+}
+
+enum UserRole {
+  SUPER_ADMIN  // internal Kimono admin — unlimited, all features
+  OWNER        // store owner — bound to their plan
+  VIEWER       // read-only team member
+}
+
+enum UserPlan {
+  TRIAL    // $10 LLM credit, 14 days, all features testable
+  STARTER  // $29/mo — 1 store, 500 products
+  GROWTH   // $79/mo — 3 stores, 5000 products
+  AGENCY   // $199/mo — 15 stores, unlimited
+  ADMIN    // internal / unlimited
+}
+
+// ============================================
+// USER AUTH
+// ============================================
+model User {
+  id             String        @id @default(cuid())
+  email          String        @unique
+  passwordHash   String
+  name           String        @default("")
+  role           UserRole      @default(OWNER)
+  plan           UserPlan      @default(TRIAL)
+
+  // Trial / subscription window
+  trialEndsAt    DateTime?     // set on register; null if paid
+  planStartedAt  DateTime?
+  planEndsAt     DateTime?     // null = active subscription (no expiry)
+
+  // LLM cost tracking (for trial $10 cap)
+  trialCreditUsed Float        @default(0) // USD spent so far (trial only)
+  emailVerified   Boolean       @default(false)
+  verifyToken     String?       @unique
+  resetToken      String?       @unique
+  resetTokenExpiresAt DateTime?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  sessions       UserSession[]
+  connections    StoreConnection[]
+  usageLogs      UsageLog[]
+}
+
+// ============================================
+// LLM USAGE LOG — tracks cost per user/feature
+// ============================================
+model UsageLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feature   String   // e.g. "blog_generate", "audit", "keywords", "brand_serp"
+  model     String   @default("claude-sonnet-4-6")
+  tokensIn  Int      @default(0)
+  tokensOut Int      @default(0)
+  costUsd   Float    @default(0)   // actual cost in USD
+  storeId   String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, feature])
+  @@index([storeId, createdAt])
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ============================================
+// STORE CONNECTION (multi-platform)
+// ============================================
+model StoreConnection {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform    Platform @default(SHOPIFY)
+  shopDomain  String
+  accessToken String
+  isActive    Boolean  @default(true)
+  connectedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, shopDomain])
+  @@index([userId, isActive])
+}
+
+// ============================================
+// SESSION — Shopify OAuth legacy (kept for compat)
+// ============================================
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+// ============================================
+// STORE
+// ============================================
+model Store {
+  id            String    @id @default(cuid())
+  shopDomain    String    @unique
+  shopName      String?
+  plan          Plan      @default(FREE)
+  currency      String    @default("RON")
+  timezone      String    @default("Europe/Bucharest")
+  installedAt   DateTime  @default(now())
+  onboardedAt   DateTime?
+  uninstalledAt DateTime?
+  isActive      Boolean   @default(true)
+  wikidataQid   String?
+  wikipediaUrl  String?
+  gbpUrl        String?
+
+  settings        StoreSettings?
+  seoProducts     SeoProduct[]
+  seoKeywords     SeoKeyword[]
+  seoSettings     SeoSetting[]
+  seoCandidates   SeoCandidate[]
+  seoProposals    SeoTaxonomyProposal[]
+  seoSyncLog      SeoSyncLog[]
+  seoJobs         SeoJob[]
+  seoAudits       SeoAudit[]
+  pSeoTemplates   PSeoTemplate[]
+  seoSuggestions  SeoOptimizeSuggestion[]
+  seoSchemas      SeoSchema[]
+  gscTriageResults GscTriageResult[]
+  blogClusters     BlogCluster[]
+  blogArticles     BlogArticle[]
+  blogRecommendations BlogRecommendation[]
+  llmsTxt             LlmsTxt?
+  redirectSuggestions RedirectSuggestion[]
+  seoEntityAudit      SeoEntityAudit?
+  seoImageAlts        SeoImageAlt[]
+  seoSchemaValidations SeoSchemaValidation[]
+  seoZeroClickOpts    SeoZeroClickOpt[]
+  seoAnswerConfidences SeoAnswerConfidence[]
+  seoEEATAudits       SeoEEATAudit[]
+  seoTopicalMaps      SeoTopicalMap[]
+  seo404Detections    Seo404Detection[]
+  fanOutSessions      FanOutSession[]
+  seoAuthors          SeoAuthor[]
+  scheduledPins       ScheduledPin[]
+  aiBrandConfig       AiBrandConfig?
+  aiPrompts           AiPrompt[]
+  aiCitationScans     AiCitationScan[]
+  seoAlerts           SeoAlert[]
+  seoDecisionLogs     SeoDecisionLog[]
+  seoGscData          SeoGscData[]
+
+  @@index([shopDomain])
+}
+
+enum Plan {
+  FREE
+  STARTER
+  GROWTH
+  SCALE
+}
+
+// ============================================
+// STORE SETTINGS
+// ============================================
+model StoreSettings {
+  id        String   @id @default(cuid())
+  storeId   String   @unique
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  aiModel   String   @default("claude-sonnet-4-6")
+  aiLanguage String  @default("ro")
+  aiTone    String   @default("professional")
+
+  // Incremental pipeline behavior (added 2026-04-23)
+  pipelineMode          String   @default("AUTO_PILOT")    // AUTO_PILOT | REVIEW_MANUAL
+  taxonomyAutoApply     Boolean  @default(false)
+  taxonomyAutoMinVolume Int      @default(100)             // min keyword volume for auto-apply
+  weeklyDigestEnabled   Boolean  @default(true)
+  deletedProductPolicy  String   @default("WARN_ONLY")     // WARN_ONLY | AUTO_UNPUBLISH
+  lastDigestSentAt      DateTime?
+  lastReconcileAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// SEO ENGINE (legacy — backward compat)
+// ============================================
+model SeoProduct {
+  id                   String    @id @default(cuid())
+  storeId              String
+  store                Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  productId            String
+  productTitle         String
+  aiTag                String?
+  aiSub                String?
+  shopifyTagApplied    Boolean   @default(false)
+  status               String    @default("pending")
+  normalizedTitle      String?
+  normalizedTitleAt    DateTime?
+  normalizedTitleHash  String?
+  discoveryAttemptedAt DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@unique([storeId, productId])
+  @@index([storeId, discoveryAttemptedAt])
+  @@index([storeId, status])
+  @@index([storeId, aiTag])
+}
+
+model SeoKeyword {
+  id                String   @id @default(cuid())
+  storeId           String
+  store             Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  parentTag         String
+  keyword           String
+  volume            Int      @default(0)
+  competition       String?
+  cpcLow            Float    @default(0)
+  cpcHigh           Float    @default(0)
+  kwType            String   @default("transactional")
+  collectionCreated Boolean  @default(false)
+  collectionId      String?
+  createdAt         DateTime @default(now())
+
+  @@index([storeId, parentTag])
+  @@index([storeId, competition])
+  @@index([storeId, collectionCreated])
+}
+
+model SeoSetting {
+  id      String @id @default(cuid())
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  key     String
+  value   String @db.Text
+
+  @@unique([storeId, key])
+}
+
+// ============================================
+// SEO TAXONOMY ENGINE v2
+// ============================================
+
+model SeoSyncLog {
+  id             String     @id @default(cuid())
+  storeId        String
+  store          Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  status         SyncStatus @default(RUNNING)
+  totalProducts  Int        @default(0)
+  syncedProducts Int        @default(0)
+  errorMessage   String?
+  startedAt      DateTime   @default(now())
+  finishedAt     DateTime?
+
+  @@index([storeId, status])
+  @@index([startedAt])
+}
+
+enum SyncStatus {
+  RUNNING
+  DONE
+  FAILED
+}
+
+model SeoCandidate {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  productId    String
+  productTitle String
+  keyword      String
+  keywordNorm  String
+  volume       Int?
+  difficulty   Int?
+  cpc          Float?
+  competition  String?
+  serpFeatures String?
+  paaCount     Int?
+  trend        String?
+  score           Float?
+  enrichedAt      DateTime?
+  cacheHit        Boolean   @default(false)
+  discoverySource String?
+  ecsScore        Float?
+  ecsPosition     Float?
+  ecsAllocated    Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+
+  @@unique([storeId, productId, keywordNorm])
+  @@index([storeId, keyword])
+  @@index([storeId, score])
+  @@index([storeId, enrichedAt])
+  @@index([storeId, ecsScore])
+  @@index([storeId, ecsAllocated])
+}
+
+model DfsCache {
+  id           String   @id @default(cuid())
+  keyword      String
+  locationCode Int
+  languageCode String
+  volume       Int      @default(0)
+  difficulty   Int      @default(0)
+  cpc          Float    @default(0)
+  competition  String   @default("LOW")
+  serpFeatures String   @default("[]")
+  paaCount     Int      @default(0)
+  paaData      String?  // JSON array of PAA questions
+  trend        String   @default("[]")
+  cachedAt     DateTime @default(now())
+  expiresAt    DateTime
+
+  @@unique([keyword, locationCode, languageCode])
+  @@index([keyword])
+  @@index([expiresAt])
+}
+
+model SeoTaxonomyProposal {
+  id                 String         @id @default(cuid())
+  storeId            String
+  store              Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryL0         String?
+  categoryL1         String
+  categoryL2         String
+  categoryL3         String?
+  currentTag         String
+  proposedTag        String
+  proposedHandle     String
+  currentVolume      Int            @default(0)
+  proposedVolume     Int            @default(0)
+  justification      String         @db.Text
+  affectedProductIds String         @default("[]")
+  affectedCount      Int            @default(0)
+  status             ProposalStatus @default(PENDING)
+  appliedAt          DateTime?
+  appliedBy          String?
+  oldHandle          String?
+  newHandle          String?
+  redirectCreated    Boolean        @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([storeId, status])
+  @@index([storeId, categoryL0])
+  @@index([storeId, categoryL1, categoryL2])
+}
+
+model SeoAudit {
+  id              String   @id @default(cuid())
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  productId       String
+  productTitle    String
+  productHandle   String   @default("")
+  score           Int      @default(0)
+  metaTitleScore  Int      @default(0)
+  metaDescScore   Int      @default(0)
+  h1Score         Int      @default(0)
+  handleScore     Int      @default(0)
+  imageScore      Int      @default(100)
+  ogScore         Int      @default(100)
+  findings        String   @default("[]") @db.Text
+  suggestions     String   @default("{}") @db.Text
+  lastOptimizedAt DateTime?
+  optimizedFields String   @default("[]")
+  entityScore     Int      @default(0)
+  entityCount     Int      @default(0)
+  entityDensity   Float    @default(0)
+  entityList      String   @default("[]") @db.Text
+  auditedAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([storeId, productId])
+  @@index([storeId, score])
+}
+
+model SeoOptimizeSuggestion {
+  id             String   @id @default(cuid())
+  storeId        String
+  store          Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  productId      String
+  productTitle   String
+  field          String
+  currentValue   String   @db.Text
+  suggestedValue String   @db.Text
+  reason         String   @default("") @db.Text
+  status         String   @default("PENDING")
+  appliedAt      DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([storeId, status])
+  @@index([storeId, productId])
+}
+
+enum ProposalStatus {
+  PENDING
+  APPROVED
+  APPLIED
+  REJECTED
+  FAILED
+}
+
+// ============================================
+// SEO BACKGROUND JOBS
+// ============================================
+model SeoJob {
+  id             String    @id @default(cuid())
+  storeId        String
+  store          Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  type           JobType
+  status         JobStatus @default(QUEUED)
+  totalItems     Int       @default(0)
+  processedItems Int       @default(0)
+  progressPct    Int       @default(0)
+  statusMessage  String    @default("")
+  cursor         String?
+  errorMessage   String?
+  retryCount     Int       @default(0)
+  queuedAt       DateTime  @default(now())
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  updatedAt      DateTime  @updatedAt
+
+  @@index([storeId, status])
+  @@index([status, queuedAt])
+}
+
+enum JobType {
+  SYNC
+  EXTRACT
+  ENRICH
+  TAG
+  TAXONOMY
+  AUDIT
+  PAA_BATCH
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+  CANCELLED
+}
+
+// ============================================
+// SCHEMA MARKUP (#08)
+// ============================================
+model SeoSchema {
+  id            String   @id @default(cuid())
+  storeId       String
+  store         Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  productId     String
+  productTitle  String
+  productHandle String   @default("")
+
+  // Generated JSON-LD
+  schemaJson    String   @db.Text
+  schemaType    String   @default("Product") // Product | BlogPosting | FAQPage
+
+  // Application status
+  status        String   @default("pending") // pending | applied | error
+  appliedAt     DateTime?
+  errorMessage  String?
+
+  generatedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([storeId, productId])
+  @@index([storeId, status])
+}
+
+// ============================================
+// GSC KEYWORD TRIAGE (#01)
+// ============================================
+model GscTriageResult {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  keyword     String
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  position    Float    @default(0)
+  ctr         Float    @default(0)
+
+  // Decision
+  action      String   // AUDIT | BLOG | MONITOR
+  priority    Int      @default(0)
+
+  triagedAt   DateTime @default(now())
+
+  @@unique([storeId, keyword])
+  @@index([storeId, action])
+  @@index([storeId, priority])
+}
+
+// ============================================
+// BLOG GENERATOR (#07)
+// ============================================
+model BlogCluster {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  primaryKeyword    String
+  supportingKeywords String  @default("[]") // JSON array
+  articleType       String  @default("pillar") // pillar|satellite|listicle|howto|comparison
+  intent            String  @default("informational")
+  estimatedVolume   Int     @default(0)
+  priorityScore     Float   @default(0)
+  status            String  @default("pending") // pending|in_progress|done
+
+  articles    BlogArticle[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([storeId, primaryKeyword])
+  @@index([storeId, status])
+}
+
+model BlogArticle {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  clusterId   String?
+  cluster     BlogCluster? @relation(fields: [clusterId], references: [id])
+
+  // Brief
+  primaryKeyword  String
+  articleType     String  @default("pillar")
+  targetWordCount Int     @default(2200)
+  brandVoice      String  @default("conversational_expert")
+
+  // Generated content
+  titleTag        String  @default("")
+  metaDescription String  @default("")
+  urlSlug         String  @default("")
+  h1              String  @default("")
+  content         String  @db.Text @default("") // full markdown
+  faqSchema       String  @db.Text @default("") // JSON-LD
+  blogPostingSchema String @db.Text @default("") // JSON-LD
+  internalLinks   String  @default("[]") // JSON array
+  imageBrief      String  @default("[]") // JSON array
+  wordCount       Int     @default(0)
+
+  // Metadata
+  language        String  @default("ro")
+  authorName      String  @default("Editor")
+  featuredImageUrl String? // set after banner generation
+
+  // Status
+  status          String  @default("draft") // draft|review|published|failed
+  shopifyArticleId String? // Shopify article GID after publish
+  errorMessage    String?
+
+  generatedAt     DateTime?
+  publishedAt     DateTime?
+  scheduledDate   DateTime? // planned publish date for calendar
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([storeId, status])
+  @@index([storeId, clusterId])
+  @@index([storeId, scheduledDate])
+}
+
+// ============================================
+// AI BLOG RECOMMENDATIONS (#07)
+// ============================================
+model BlogRecommendation {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  // Brief fields
+  primaryKeyword      String
+  supportingKeywords  String  @default("[]")
+  articleType         String  @default("pillar")
+  targetWordCount     Int     @default(2200)
+  brandVoice          String  @default("conversational_expert")
+  rationale           String  @default("") // why Claude recommends this
+
+  // Priority
+  priorityScore       Float   @default(0)
+  estimatedImpact     String  @default("medium") // low|medium|high
+  suggestedDate       DateTime?
+
+  // Status
+  status              String  @default("pending") // pending|accepted|dismissed
+  articleId           String? // if converted to article
+
+  generatedAt         DateTime @default(now())
+
+  @@index([storeId, status])
+  @@index([storeId, priorityScore])
+}
+
+// ============================================
+// LLMS.TXT
+// ============================================
+model LlmsTxt {
+  id          String   @id @default(cuid())
+  storeId     String   @unique
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  content     String   @db.Text        // full llms.txt markdown (all products)
+  sections    String   @db.Text @default("[]") // JSON: editable sections for UI
+  score       Int      @default(0)     // completeness score 0-100
+  publishedAt DateTime?
+  shopifyFileUrl String?
+
+  history     LlmsTxtHistory[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LlmsTxtHistory {
+  id        String   @id @default(cuid())
+  llmsTxtId String
+  llmsTxt   LlmsTxt  @relation(fields: [llmsTxtId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  score     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([llmsTxtId, createdAt])
+}
+
+// ============================================
+// REDIRECT MANAGER (#05)
+// ============================================
+model RedirectSuggestion {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  fromPath    String                    // broken URL path e.g. /products/old-slug
+  toPath      String                    // suggested destination
+  confidence  Int      @default(0)      // 0-100
+  reason      String   @default("")     // why this redirect makes sense
+  source      String   @default("gsc")  // gsc | crawl | manual
+  clicks      Int      @default(0)      // GSC clicks on broken URL
+  impressions Int      @default(0)
+
+  status      String   @default("pending")  // pending | applied | dismissed
+  appliedAt   DateTime?
+  shopifyRedirectId String?
+
+  detectedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([storeId, fromPath])
+  @@index([storeId, status])
+  @@index([storeId, confidence])
+}
+
+// ============================================
+// PROGRAMMATIC SEO (pSEO)
+// ============================================
+
+enum PSeoPattern {
+  BEST_X_FOR_Y
+  ATTRIBUTE_X
+  X_VS_Y
+  X_UNDER_PRICE
+  GIFT_GUIDE
+}
+
+enum PSeoStatus {
+  DRAFT
+  APPROVED
+  PUBLISHED
+  SKIPPED
+  FAILED
+}
+
+enum PSeoPublishTarget {
+  METAOBJECT
+  PAGE
+}
+
+model PSeoTemplate {
+  id              String            @id @default(cuid())
+  storeId         String
+  store           Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name            String
+  pattern         PSeoPattern
+  urlPattern      String
+  titleTpl        String
+  metaTpl         String
+  h1Tpl           String
+  tokenDictsJson  Json
+  aiPromptJson    Json?
+  publishTarget   PSeoPublishTarget @default(METAOBJECT)
+  minSearchVolume Int               @default(20)
+  maxKd           Int               @default(40)
+  minProductCount Int               @default(4)
+  maxRows         Int               @default(500)
+  status          String            @default("draft")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  rows            PSeoRow[]
+  batches         PSeoPublishBatch[]
+
+  @@index([storeId])
+}
+
+model PSeoRow {
+  id                  String     @id @default(cuid())
+  templateId          String
+  template            PSeoTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  storeId             String
+  tokensJson          Json
+  targetKeyword       String
+  url                 String
+  title               String
+  metaDescription     String
+  h1                  String
+  searchVolume        Int?
+  kd                  Int?
+  matchedProductIds   Json?
+  productCount        Int        @default(0)
+  cannibalFlag        Boolean    @default(false)
+  cannibalNotes       String?    @db.Text
+  qualityScore        Int?
+  qualityIssues       String?    @db.Text
+  status              PSeoStatus @default(DRAFT)
+  shopifyResourceId   String?
+  shopifyResourceType String?
+  publishedAt         DateTime?
+  impressions30d      Int?
+  clicks30d           Int?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  contents            PSeoContent[]
+
+  @@index([storeId, status])
+  @@index([templateId])
+  @@unique([templateId, targetKeyword])
+}
+
+model PSeoContent {
+  id             String   @id @default(cuid())
+  rowId          String
+  row            PSeoRow  @relation(fields: [rowId], references: [id], onDelete: Cascade)
+  sectionKey     String
+  aiModel        String?
+  promptHash     String?
+  content        String   @db.Text
+  wordCount      Int      @default(0)
+  uniquenessHash String?
+  createdAt      DateTime @default(now())
+
+  @@index([rowId])
+  @@unique([rowId, sectionKey])
+}
+
+model PSeoPublishBatch {
+  id           String       @id @default(cuid())
+  storeId      String
+  templateId   String
+  template     PSeoTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  size         Int          @default(50)
+  scheduledAt  DateTime?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  okCount      Int          @default(0)
+  failCount    Int          @default(0)
+  skippedCount Int          @default(0)
+  status       String       @default("queued")
+  errorLog     String?      @db.Text
+  createdAt    DateTime     @default(now())
+
+  @@index([storeId])
+}
+
+// ============================================
+// OPENCLAW BATCH 1 (P1)
+// M14 Entity SEO · M03 Image Vision · M23 Schema Validator
+// ============================================
+
+// M14 — Entity SEO: Organization schema + sameAs + entity consistency across site
+model SeoEntityAudit {
+  id                String   @id @default(cuid())
+  storeId           String   @unique
+  store             Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  entities          Json     @default("[]") // [{name, type, frequency, sources: [product|article|about]}]
+  organizationJson  String?  @db.Text       // Organization JSON-LD with sameAs array
+  consistencyScore  Int      @default(0)    // 0-100
+  issues            Json     @default("[]") // [{entity, issue, recommendation}]
+
+  appliedToTheme    Boolean  @default(false)
+  appliedAt         DateTime?
+
+  lastAuditedAt     DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([storeId])
+}
+
+// M03 — Image Vision: Claude Vision-generated alt text + filename per product image
+model SeoImageAlt {
+  id                 String   @id @default(cuid())
+  storeId            String
+  store              Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  productId          String
+  productTitle       String
+  imageId            String   // Shopify image GID
+  imageUrl           String   @db.Text
+  imagePosition      Int      @default(0)
+
+  originalAlt        String?  @default("")
+  suggestedAlt       String?  @default("")  @db.Text
+  suggestedFilename  String?
+  reasoning          String?  @db.Text       // Claude's rationale
+
+  status             String   @default("pending") // pending | approved | applied | rejected | error
+  errorMessage       String?
+  appliedAt          DateTime?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([storeId, imageId])
+  @@index([storeId, status])
+  @@index([storeId, productId])
+}
+
+// M23 — Schema Validator: Rich Results Test API + GSC structured data errors
+model SeoSchemaValidation {
+  id                   String   @id @default(cuid())
+  storeId              String
+  store                Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  pageUrl              String   @db.Text
+  pageUrlHash          String                    // sha1 of pageUrl for unique constraint
+  schemaType           String   @default("Product") // Product | Article | FAQPage | Organization | BreadcrumbList
+
+  isValid              Boolean  @default(false)
+  errors               Json     @default("[]") // [{path, message, severity}]
+  warnings             Json     @default("[]")
+  eligibleRichResults  Json     @default("[]") // ["product-snippet", "breadcrumb"]
+
+  lastCheckedAt        DateTime @default(now())
+  createdAt            DateTime @default(now())
+
+  @@unique([storeId, pageUrlHash, schemaType])
+  @@index([storeId, isValid])
+  @@index([storeId, lastCheckedAt])
+}
+
+// ============================================
+// OPENCLAW BATCH 2 (P2)
+// M13 Zero-Click · M27 Answer Confidence
+// ============================================
+
+// M13 — Zero-Click: optimize for featured snippets, PAA, definition boxes
+model SeoZeroClickOpt {
+  id                String   @id @default(cuid())
+  storeId           String
+  store             Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  keyword           String
+  serpFeature       String   // featured_snippet | people_also_ask | definition | video_pack | knowledge_panel
+  competitorUrl     String?  @db.Text
+  competitorText    String?  @db.Text
+  recommendedText   String?  @db.Text
+  recommendedFormat String?  // paragraph | list | table | Q&A
+  applicableUrl     String?  @db.Text
+
+  status            String   @default("pending")
+  appliedAt         DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([storeId, keyword])
+  @@index([storeId, status])
+}
+
+// M27 — Answer Confidence: citability score per article (0-100) based on AI citation criteria
+model SeoAnswerConfidence {
+  id              String   @id @default(cuid())
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  sourceType      String   // blog_article | product_page | other
+  sourceId        String?
+  sourceTitle     String
+  sourceUrl       String?  @db.Text
+  contentHash     String
+
+  overallScore    Int      @default(0) // 0-100
+  criteria        Json     @default("[]") // [{name, score, feedback}]
+  recommendations Json     @default("[]") // [{section, issue, fix}]
+
+  runAt           DateTime @default(now())
+
+  @@unique([storeId, sourceType, sourceId, contentHash])
+  @@index([storeId, overallScore])
+}
+
+// ============================================
+// OPENCLAW BATCH 3 (P3)
+// M15 E-E-A-T · M17 Topical Authority · M05a 404 Detection
+// ============================================
+
+// M15 — E-E-A-T Audit: Experience, Expertise, Authoritativeness, Trustworthiness (12+ check points)
+model SeoEEATAudit {
+  id                     String   @id @default(cuid())
+  storeId                String
+  store                  Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  experienceScore        Int      @default(0)
+  expertiseScore         Int      @default(0)
+  authoritativenessScore Int      @default(0)
+  trustworthinessScore   Int      @default(0)
+  overallScore           Int      @default(0)
+
+  findings               Json     @default("[]") // [{category:E|E|A|T, point, status:pass|fail|warn, note}]
+  plan                   Json     @default("[]") // [{action, priority:high|med|low, estimatedImpact}]
+
+  runAt                  DateTime @default(now())
+
+  @@index([storeId, runAt])
+}
+
+// M17 — Topical Authority Map: own topics vs competitor topics, gaps, editorial plan
+model SeoTopicalMap {
+  id            String   @id @default(cuid())
+  storeId       String
+  store         Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  topics        Json     @default("[]") // [{topic, ownKwCount, ownAvgVol, competitorKwCount, gapScore}]
+  gaps          Json     @default("[]") // [{topic, opportunity, priority, estimatedKeywords, estimatedVolume}]
+  editorialPlan Json     @default("[]") // [{month:1..12, articles:[{title, keywords, priority, type:pillar|satellite}]}]
+  competitors   Json     @default("[]") // ["domain1.com", ...]
+
+  runAt         DateTime @default(now())
+
+  @@index([storeId, runAt])
+}
+
+// M05a — 404 Detection: crawl sitemap + internal links, log 404s for Redirect Manager to resolve
+model Seo404Detection {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  url          String   @db.Text
+  urlHash      String
+  statusCode   Int      @default(404)
+  referrers    Json     @default("[]")
+
+  firstSeenAt  DateTime @default(now())
+  lastSeenAt   DateTime @default(now())
+  occurrences  Int      @default(1)
+
+  status       String   @default("open") // open | redirected | ignored
+  redirectedTo String?  @db.Text
+  resolvedAt   DateTime?
+
+  @@unique([storeId, urlHash])
+  @@index([storeId, status])
+}
+
+// ============================================
+// PORT 2026-05-21: paritate cu Shopify app Kimono OpenSEO
+// Sprint A — 13 modele noi (AI Citations + SEO Brain + Pinterest + Webhook dedupe)
+// ============================================
+
+model FanOutSession {
+  id              String   @id @default(cuid())
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  primaryKeyword  String
+  status          String   @default("pending")
+  queries         String   @default("[]") @db.Text
+  totalQueries    Int      @default(0)
+  coveredCount    Int      @default(0)
+  errorMessage    String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([storeId, createdAt(sort: Desc)])
+}
+
+model SeoAuthor {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  name         String
+  role         String?
+  bio          String?  @db.Text
+  avatarUrl    String?
+
+  wikipediaUrl String?
+  wikidataQid  String?
+  linkedinUrl  String?
+  twitterUrl   String?
+  websiteUrl   String?
+
+  credentials  String   @default("[]") @db.Text
+  isDefault    Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([storeId, name])
+  @@index([storeId])
+}
+
+model ScheduledPin {
+  id            String    @id @default(cuid())
+  storeId       String
+  store         Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  scheduledFor  DateTime
+  status        String    @default("pending")
+
+  boardId       String
+  boardName     String?
+  imageUrl      String    @db.Text
+  title         String    @db.Text
+  description   String    @db.Text
+  altText       String?   @db.Text
+  link          String    @db.Text
+
+  source        String    @default("manual")
+  productId     String?
+  productTitle  String?
+
+  pinterestPinId String?
+  errorMessage   String?  @db.Text
+  attempts       Int      @default(0)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  postedAt      DateTime?
+
+  @@index([storeId, status, scheduledFor])
+  @@index([status, scheduledFor])
+}
+
+model WebhookDedupe {
+  id           String   @id
+  topic        String?
+  shopDomain   String?
+  processedAt  DateTime @default(now())
+
+  @@index([processedAt])
+}
+
+model AiBrandConfig {
+  id          String   @id @default(cuid())
+  storeId     String   @unique
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  brandName   String
+  aliases     String   @default("[]")
+  domains     String   @default("[]")
+  competitors String   @default("[]")
+
+  scheduleFrequency      String   @default("off")
+  scheduleRunsPerPrompt  Int      @default(3)
+  lastScheduledScanAt    DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AiPrompt {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  text        String   @db.Text
+  intent      String?
+  cluster     String?
+  status      String   @default("active")
+  source      String   @default("manual")
+
+  textHash    String
+
+  createdAt   DateTime @default(now())
+  lastRunAt   DateTime?
+  runs        AiCitationRun[]
+
+  @@unique([storeId, textHash])
+  @@index([storeId, status])
+}
+
+model AiCitationScan {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  status       String   @default("RUNNING")
+  startedAt    DateTime @default(now())
+  finishedAt   DateTime?
+
+  platforms    String   @default("[]")
+  runsPerPrompt Int     @default(3)
+  promptCount  Int      @default(0)
+
+  totalRuns    Int      @default(0)
+  totalCitations Int    @default(0)
+  brandMentions Int     @default(0)
+  brandCitationRate Float?
+  costCents    Int      @default(0)
+  errorMessage String?
+
+  runs         AiCitationRun[]
+
+  @@index([storeId, startedAt])
+}
+
+model AiCitationRun {
+  id           String   @id @default(cuid())
+  scanId       String
+  scan         AiCitationScan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  promptId     String
+  prompt       AiPrompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  platform     String
+  model        String?
+  runIndex     Int      @default(0)
+
+  rawResponse  Json
+  responseText String   @db.Text
+
+  brandMentioned Boolean @default(false)
+  brandPosition Int?
+  mentionCount Int      @default(0)
+  competitorsMentioned String @default("[]")
+
+  costCents    Int      @default(0)
+  durationMs   Int?
+  errorMessage String?
+
+  citations    AiCitation[]
+  ranAt        DateTime @default(now())
+
+  @@index([scanId, platform])
+  @@index([promptId, platform, runIndex])
+}
+
+model AiCitation {
+  id           String   @id @default(cuid())
+  runId        String
+  run          AiCitationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  url          String   @db.Text
+  domain       String
+  title        String?  @db.Text
+  position     Int?
+  isBrandOwned Boolean  @default(false)
+  snippetText  String?  @db.Text
+
+  createdAt    DateTime @default(now())
+
+  @@index([runId])
+  @@index([domain])
+}
+
+model SeoAlert {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  type         String
+  severity     String
+  subjectKind  String?
+  subjectId    String?
+
+  title        String
+  description  String   @db.Text
+  metadata     Json     @default("{}")
+
+  status       String   @default("open")
+  ignoredUntil DateTime?
+  resolvedAt   DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([storeId, status, severity])
+  @@index([storeId, type, status])
+  @@index([storeId, subjectKind, subjectId])
+}
+
+model SeoDecisionLog {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  decisionKind String
+  subjectKind  String?
+  subjectId    String?
+
+  inputs       Json
+  output       Json
+  rationale    String?  @db.Text
+
+  supersededBy String?
+  decidedBy    String   @default("auto_v1")
+
+  createdAt    DateTime @default(now())
+
+  @@index([storeId, decisionKind, createdAt])
+  @@index([storeId, subjectKind, subjectId])
+}
+
+model SeoAiExtractCache {
+  id           String   @id @default(cuid())
+  clusterHash  String   @unique
+  sampleTitle  String
+  language     String   @default("ro")
+  candidates   Json
+  aiModel      String
+  hitCount     Int      @default(0)
+  promptHash   String?
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
+  expiresAt    DateTime
+
+  @@index([clusterHash])
+  @@index([expiresAt])
+}
+
+model SeoGscData {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  productId    String
+  pageUrl      String
+  query        String
+
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  position     Float    @default(0)
+  ctr          Float    @default(0)
+
+  dateRangeStart DateTime
+  dateRangeEnd   DateTime
+  syncedAt       DateTime @default(now())
+
+  @@unique([storeId, pageUrl, query, dateRangeStart])
+  @@index([storeId, productId])
+  @@index([storeId, pageUrl])
+  @@index([storeId, syncedAt])
+}

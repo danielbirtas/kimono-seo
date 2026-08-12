@@ -1,0 +1,165 @@
+{
+  "_meta": {
+    "version": "1.1.0-pure-ro",
+    "updated": "2026-05-18",
+    "description": "Romanian e-commerce synonym dictionary, PURE Romanian only. v1.1 cleanup: removed all English terms (wallpaper, scale, frying pan, white, black, marble, shelter, gazebo, etc.) and archaic/uncommon Romanian (lipibil, marmoreal, balanta-for-modern-scales, etc.). Restricted to single-token-to-single-token mappings only — multi-token synonyms produced grammatically awkward candidates like 'placi folie decorativa autoadeziv'. Loanwords kept ONLY when Romanian e-commerce users actually search for them (smart, set, kit, LED, WiFi, Bluetooth).",
+    "rules": [
+      "RO only — no English equivalents",
+      "1:1 token mapping only (avoid 1→2 token expansions)",
+      "Skip archaic/literary terms — keep commercial spoken Romanian",
+      "Skip technical jargon unless commonly searched"
+    ]
+  },
+
+  "_categories": {
+    "fastening_adhesion": {
+      "autocolant": ["autoadeziv", "adeziv"],
+      "autoadeziv": ["autocolant", "adeziv"],
+      "adeziv": ["autocolant", "autoadeziv"],
+      "fixare":    ["prindere", "montaj"]
+    },
+
+    "wall_decor": {
+      "tapet":       ["stickere"],
+      "stickere":    ["autocolante", "decoratiuni"],
+      "autocolante": ["stickere", "decoratiuni"],
+      "decoratiuni": ["ornamente", "decor", "stickere"],
+      "ornamente":   ["decoratiuni", "decor"],
+      "decor":       ["decoratiuni", "ornamente"]
+    },
+
+    "materials": {
+      "fonta":      ["fier"],
+      "fier":       ["fonta"],
+      "inox":       ["otel"],
+      "otel":       ["inox"],
+      "ceramica":   ["portelan"],
+      "portelan":   ["ceramica"],
+      "sticla":     ["cristal"],
+      "bambus":     ["bambu"],
+      "marmura":    ["imitatie"]
+    },
+
+    "rooms_use_case": {
+      "bucatarie":  ["gatit"],
+      "baie":       ["dus"],
+      "sufragerie": ["living"],
+      "living":     ["sufragerie"],
+      "exterior":   ["outdoor", "gradina"],
+      "outdoor":    ["exterior", "gradina"],
+      "gradina":    ["exterior", "curte"],
+      "curte":      ["gradina"],
+      "balcon":     ["terasa"],
+      "terasa":     ["balcon"]
+    },
+
+    "kitchen": {
+      "tigaie":   ["tigai"],
+      "tigai":    ["tigaie"],
+      "oala":     ["cratita"],
+      "cratita":  ["oala"],
+      "ibric":    ["cafetiera"],
+      "cafetiera":["espressor", "ibric"]
+    },
+
+    "bathroom_textile": {
+      "prosop":    ["servet"],
+      "servet":    ["prosop", "carpa"],
+      "perdea":    ["draperie"],
+      "draperie":  ["perdea", "perdele"],
+      "perdele":   ["draperie"],
+      "covor":     ["covoras", "presul"],
+      "covoras":   ["covor", "presul"],
+      "presul":    ["covor", "covoras"],
+      "carpa":     ["servet", "lavata"]
+    },
+
+    "storage": {
+      "suport":      ["organizator", "stand", "rastel"],
+      "organizator": ["suport", "compartimentare"],
+      "rastel":      ["raft", "suport"],
+      "raft":        ["rastel"],
+      "stand":       ["suport"],
+      "cutie":       ["lada"],
+      "lada":        ["cutie"],
+      "husa":        ["protectie", "saculet"],
+      "saculet":     ["husa", "punga"],
+      "geanta":      ["rucsac"],
+      "rucsac":      ["geanta", "ghiozdan"]
+    },
+
+    "cleaning": {
+      "perie":     ["pamatuf"],
+      "pamatuf":   ["perie"],
+      "matura":    ["stergator"],
+      "stergator": ["matura", "perie"],
+      "mop":       ["stergator"]
+    },
+
+    "lighting": {
+      "lampa":     ["bec", "iluminat"],
+      "iluminat":  ["lampa"],
+      "ghirlanda": ["instalatie"],
+      "instalatie": ["ghirlanda"]
+    },
+
+    "outdoor": {
+      "prelata":   ["copertina"],
+      "copertina": ["prelata"],
+      "cort":      ["pavilion"],
+      "pavilion":  ["cort"],
+      "umbrar":    ["pergola"],
+      "pergola":   ["umbrar"],
+      "impermeabil":   ["hidrofug"],
+      "hidrofug":      ["impermeabil"]
+    },
+
+    "kids": {
+      "jucarie":    ["joc"],
+      "joc":        ["jucarie"],
+      "bicicleta":  ["bike"],
+      "tricicleta": ["trei", "roti"]
+    },
+
+    "fitness": {
+      "fitness":  ["antrenament", "gym"],
+      "gym":      ["fitness", "antrenament"],
+      "saltea":   ["covor"],
+      "ganterele":["greutati"],
+      "greutati": ["ganterele"]
+    },
+
+    "tech": {
+      "smart":       ["inteligent"],
+      "inteligent":  ["smart"],
+      "bluetooth":   ["wireless"],
+      "wireless":    ["bluetooth", "wifi"],
+      "wifi":        ["wireless"],
+      "incarcator":  ["adaptor", "alimentator"],
+      "adaptor":     ["incarcator"],
+      "telecomanda": ["control"]
+    },
+
+    "personal_care": {
+      "uscator": ["fen"],
+      "fen":     ["uscator"]
+    },
+
+    "form": {
+      "rotund":    ["circular"],
+      "circular":  ["rotund"],
+      "patrat":    ["dreptunghi"],
+      "dreptunghi":["patrat"]
+    },
+
+    "quality": {
+      "premium":     ["pro", "top"],
+      "profesional": ["pro", "industrial"],
+      "portabil":    ["transportabil"],
+      "pliabil":     ["rabatabil"],
+      "ergonomic":   ["confortabil"],
+      "antialunecare": ["antiderapant"],
+      "antiderapant":  ["antialunecare"]
+    }
+  }
+}

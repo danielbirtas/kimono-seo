@@ -1,0 +1,1 @@
+ALTER TABLE "SeoCandidate" ADD COLUMN IF NOT EXISTS "paaData" TEXT;
