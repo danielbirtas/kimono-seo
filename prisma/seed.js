@@ -119,6 +119,7 @@ async function main() {
       passwordHash,
       name:      adminName,
       role:      "SUPER_ADMIN",
+      emailVerified: true,       // seeded admin can log in without the email-verify flow (no SMTP needed)
       plan:      "ADMIN",
       planStartedAt: new Date(),
       planEndsAt:    null,        // never expires
@@ -129,6 +130,7 @@ async function main() {
       passwordHash,
       name:       adminName,
       role:       "SUPER_ADMIN",
+      emailVerified: true,       // seeded admin can log in without the email-verify flow (no SMTP needed)
       plan:       "ADMIN",
       planStartedAt: new Date(),
       planEndsAt:    null,

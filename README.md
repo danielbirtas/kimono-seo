@@ -137,6 +137,8 @@ For local development, use `npm run dev` (see [CONTRIBUTING.md](CONTRIBUTING.md)
 | Document | Contents |
 | --- | --- |
 | [docs/INSTALLATION.md](docs/INSTALLATION.md) | Prerequisites, install, database setup, first run |
+| [docs/INSTALL_WITH_CLAUDE_CODE.md](docs/INSTALL_WITH_CLAUDE_CODE.md) | Install on your server with Claude Code (AI-assisted) |
+| [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | **Start here** — first login + step-by-step for connecting every integration |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | All environment variables and external service / OAuth setup |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, modules, job queue, and data flow |
 | [docs/API.md](docs/API.md) | HTTP endpoints (`/api/*`), pages (`/app/*`), and cron routes |

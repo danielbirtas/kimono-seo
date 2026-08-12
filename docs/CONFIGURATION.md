@@ -51,8 +51,8 @@ Related docs: [README.md](../README.md) · [INSTALLATION.md](./INSTALLATION.md) 
 | `SHOPIFY_API_VERSION` | Optional | modules hardcode `2025-04` | Shopify |
 | `GSC_CLIENT_ID` | **Required (GSC/GA4)** | — | Google |
 | `GSC_CLIENT_SECRET` | **Required (GSC/GA4)** | — | Google |
-| `GOOGLE_CLIENT_ID` | **Required (GSC/GA4 refresh)** | — | Google |
-| `GOOGLE_CLIENT_SECRET` | **Required (GSC/GA4 refresh)** | — | Google |
+| `GOOGLE_CLIENT_ID` | **Required (GSC redirect/404 scan)** | — | Google |
+| `GOOGLE_CLIENT_SECRET` | **Required (GSC redirect/404 scan)** | — | Google |
 | `PAGESPEED_API_KEY` | Optional | keyless (rate-limited) | Google |
 | `DATAFORSEO_LOGIN` | Optional | — | DataForSEO |
 | `DATAFORSEO_PASSWORD` | Optional | — | DataForSEO |
