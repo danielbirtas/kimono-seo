@@ -22,7 +22,7 @@ function appUrl() {
 }
 
 function fromAddress() {
-  return process.env.SMTP_FROM || "Kimono SEO <noreply@kimonogroup.ro>";
+  return process.env.SMTP_FROM || "Kimono SEO <noreply@example.com>";
 }
 
 // Teal palette (match platform)
@@ -58,7 +58,7 @@ function brandedLayout(title, body) {
           ${body}
         </td></tr>
         <tr><td style="background:${C.off};padding:16px 28px;border-top:1px solid ${C.border};font-size:11px;color:${C.muted};text-align:center;">
-          Kimono Group &middot; Baia Mare &amp; București &middot; <a href="${appUrl()}" style="color:${C.muted};text-decoration:none;">seo.kimonogroup.ro</a>
+          Kimono SEO &middot; <a href="${appUrl()}" style="color:${C.muted};text-decoration:none;">${appUrl()}</a>
         </td></tr>
       </table>
     </td></tr>

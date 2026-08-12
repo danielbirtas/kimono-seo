@@ -176,7 +176,7 @@ const CACHE_COLORS = [
 
 const CACHE_NOISE = [
   "din", "cu", "de", "la", "pe", "in", "pentru", "fara", "intre", "prin",
-  "vivimall", "si", "sau",
+  "si", "sau",
   // Secondary modifiers — strip so near-variants of same product cluster together.
   // Before this list: "Pietre" and "Pietre Mici" produced different cluster hashes,
   // wasting AI Extract calls on near-duplicate products.

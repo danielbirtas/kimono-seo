@@ -105,7 +105,7 @@ function validateItem(item) {
 
 export async function validatePage(storeId, pageUrl) {
   const resp = await fetch(pageUrl, {
-    headers: { "User-Agent": "Kimono-SchemaValidator/1.0 (+https://seo.kimonogroup.ro)" },
+    headers: { "User-Agent": `Kimono-SchemaValidator/1.0 (+${process.env.APP_URL || "http://localhost:3000"})` },
     redirect: "follow",
   });
   if (!resp.ok) throw new Error(`Fetch failed: HTTP ${resp.status}`);

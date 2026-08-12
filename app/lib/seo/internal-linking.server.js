@@ -201,8 +201,7 @@ async function findBestMatch(description, storeId, shopDomain, usedUrls = new Se
 function buildAnchorText(description, matchTitle) {
   // Remove domain references and clean up
   const cleaned = description
-    .replace(/—.*$/, "")                    // Remove — domain
-    .replace(/\bvivimall\.ro\b/gi, "")
+    .replace(/—.*$/, "")                    // Remove "— domain" brand suffix
     .replace(/\bshop\b/gi, "")
     .replace(/colecție\s*/gi, "")
     .replace(/colectie\s*/gi, "")
