@@ -27,7 +27,7 @@ Related docs: [README.md](../README.md) · [INSTALLATION.md](./INSTALLATION.md) 
 | `DATABASE_URL` | **Required** | — | Database |
 | `NODE_ENV` | Optional | *(unset)* | Core / App |
 | `PORT` | Optional | `3000` | Core / App |
-| `APP_URL` | **Required in practice** | `https://seo.kimonogroup.ro` | Core / App |
+| `APP_URL` | **Required in practice** | `https://seo.example.com` | Core / App |
 | `SHOPIFY_APP_URL` | Optional | `https://kimono-bi-production.up.railway.app` | Core / App |
 | `SHOPIFY_APP_HANDLE` | Optional | `kimono-ultimate-seo` | Core / App |
 | `ADMIN_EMAIL` | Optional | `admin@kimonogroup.ro` | Auth (seed) |
@@ -74,7 +74,7 @@ Register these exact paths with each provider. `{APP_URL}` / `{SHOPIFY_APP_URL}`
 
 | Provider | Redirect URI the code builds | Base variable used |
 | --- | --- | --- |
-| Shopify OAuth | `/api/shopify-oauth/callback` | **Hardcoded** to `https://bi.kimonogroup.ro/...` — must be edited in code (see below) |
+| Shopify OAuth | `/api/shopify-oauth/callback` | Derived from `APP_URL` — register `${APP_URL}/api/shopify-oauth/callback` in the Shopify app |
 | Google Search Console | `{APP_URL}/gsc-callback` | `APP_URL` → `SHOPIFY_APP_URL` |
 | Google Analytics 4 | `{APP_URL}/ga4-callback` | `APP_URL` → `SHOPIFY_APP_URL` |
 | Bing Webmaster | `{SHOPIFY_APP_URL}/bing-callback` | `SHOPIFY_APP_URL` |
@@ -106,7 +106,7 @@ Public HTTPS base URL of **this** app. Used to build:
 - account **verify / reset** links in auth emails;
 - the **GSC** (`/gsc-callback`) and **GA4** (`/ga4-callback`) OAuth redirect URIs.
 
-If unset, the code falls back to `https://seo.kimonogroup.ro` — do not rely on this. Set it to your own domain, e.g. `https://seo.example.com`.
+If unset, the code falls back to `http://localhost:3000` — do not rely on this in production. Set it to your own domain, e.g. `https://seo.example.com`.
 
 ### `SHOPIFY_APP_URL` — Optional
 Alternate public base URL. Used as the base for the **Bing** (`/bing-callback`) and **Pinterest** (`/pinterest-callback`) redirect URIs, and as a fallback for GSC/GA4 when `APP_URL` is unset. If you use Bing or Pinterest OAuth, set this to the same value as `APP_URL`. Code fallback if unset: `https://kimono-bi-production.up.railway.app`.
@@ -226,21 +226,20 @@ You can use either a **custom app** (single store) or a **distribution app** (mu
    Configure the app with (at least) these access scopes.
 4. **Allowed redirection URL(s).** Add your callback URL (see the critical note below).
 
-### ⚠️ Callback URL is hardcoded — you must edit it
+### Callback URL
 
-The install route (`app/routes/api.shopify-oauth.install.jsx`) builds the redirect URI as a **hardcoded literal**:
-
-```js
-const redirectUri = `https://bi.kimonogroup.ro/api/shopify-oauth/callback`;
-```
-
-Before self-hosting, **change this to your own domain**, e.g.:
+The install route (`app/routes/api.shopify-oauth.install.jsx`) derives the redirect URI from your
+**`APP_URL`** (falling back to `SHOPIFY_APP_URL`, then `http://localhost:3000`):
 
 ```js
-const redirectUri = `https://seo.example.com/api/shopify-oauth/callback`;
+const appUrl = process.env.APP_URL || process.env.SHOPIFY_APP_URL || "http://localhost:3000";
+const redirectUri = `${appUrl}/api/shopify-oauth/callback`;
 ```
 
-Then register `https://seo.example.com/api/shopify-oauth/callback` as an **Allowed redirection URL** in the Shopify app. The install entry point is `GET /api/shopify-oauth/install?shop=your-store.myshopify.com`.
+So you only need to **set `APP_URL`** to your public URL. Then register
+`${APP_URL}/api/shopify-oauth/callback` — e.g. `https://seo.example.com/api/shopify-oauth/callback` —
+as an **Allowed redirection URL** in the Shopify app. The install entry point is
+`GET /api/shopify-oauth/install?shop=your-store.myshopify.com`.
 
 ### `SHOPIFY_API_VERSION` — Optional
 Admin API version override. **Note:** most modules hardcode `2025-04` in their request URLs, so this variable is not consistently honored. Leave it unset unless you have verified a specific need.
