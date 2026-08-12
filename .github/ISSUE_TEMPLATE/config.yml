@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Report a security vulnerability (private)
+    url: https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability
+    about: Use the repository Security tab → "Report a vulnerability". Please do NOT open a public issue for security problems.
+  - name: 💼 Commercial license & paid support
+    url: mailto:office@kimonogroup.ro
+    about: For commercial (non-AGPL) licensing, SLA support, or managed hosting. See LICENSING.md.

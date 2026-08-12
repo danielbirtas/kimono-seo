@@ -1,0 +1,64 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "updated": "2026-05-18",
+    "description": "Romanian stop words + e-commerce noise tokens for keyword extraction. Used by source 2 (Pattern-based combinatorial) to filter out tokens that should NEVER appear as keyword roots. Also used by Title Normalizer for de-noising."
+  },
+
+  "stop_words_generic": [
+    "si", "sau", "cu", "la", "de", "in", "pe", "din", "ca", "el", "ea",
+    "un", "o", "unu", "doi", "trei", "patru", "cinci", "sase", "sapte", "opt", "noua", "zece",
+    "este", "sunt", "fost", "fi", "va", "vor", "ar",
+    "mai", "asa", "decat", "deja", "doar", "numai", "abia",
+    "pentru", "intre", "fara", "prin", "spre", "catre", "intr",
+    "acest", "aceasta", "acestui", "acelei", "aceea", "acela",
+    "meu", "mea", "tau", "ta", "sau", "sa", "lui", "ei", "lor", "noi", "voi",
+    "ci", "dar", "iar", "insa", "totusi",
+    "the", "a", "an", "of", "to", "with", "for", "from", "into"
+  ],
+
+  "ecommerce_noise": [
+    "set", "pack", "pachet", "kit", "buc", "bucati", "buc.",
+    "x", "X", "+", "-",
+    "cm", "mm", "m", "ml", "l", "kg", "g", "gr", "w", "v", "a", "ah", "hz",
+    "compatibil", "potrivit", "ideal", "perfect",
+    "calitate", "premium", "extra", "super", "ultra",
+    "incluse", "inclusiv", "include", "format", "model",
+    "ofertă", "oferta", "promo", "reducere", "preț", "pret",
+    "livrare", "expeditie", "transport",
+    "garantie", "garanție", "asigurare",
+    "vivimall", "vivimall.ro"
+  ],
+
+  "filler_phrases": [
+    "rezistent la",
+    "usor de",
+    "in mod",
+    "din material",
+    "cu invelis",
+    "pentru calitate",
+    "de calitate",
+    "pentru utilizare",
+    "in functie de",
+    "fara bpa",
+    "fara plumb",
+    "fara substante"
+  ],
+
+  "punctuation_chars": [
+    ",", ".", ";", ":", "|", "·", "•", "—", "–", "-",
+    "(", ")", "[", "]", "{", "}",
+    "/", "\\", "&", "@", "#", "$", "%",
+    "?", "!", "\"", "'"
+  ],
+
+  "min_token_length": 3,
+  "max_token_length": 30,
+
+  "_notes": [
+    "Min token length 3 elimina 'a', 'e', 'i', 'cu', 'la', etc. (deja in stop_words)",
+    "Max length 30 elimina hash-like tokens si typos lungi",
+    "'set' este in ecommerce_noise — extract trebuie sa-l filtreze din keyword candidates, dar lasa-l in titlu original",
+    "Numbers (3x3, 30x30, 700d) NU sunt filtrate aici — au valoare SEO (size, model)"
+  ]
+}
