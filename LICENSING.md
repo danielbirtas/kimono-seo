@@ -66,4 +66,4 @@ Because Kimono SEO is dual-licensed, contributions require a **Contributor Licen
 
 ## 5. Companion WooCommerce plugin
 
-The companion WooCommerce connector plugin (`kimono-bi-woo-plugin`) is **not** covered by this dual-license. As a WordPress plugin it is licensed under **GPL-2.0-or-later**, per WordPress's licensing requirements.
+This repository contains no separately-licensed bundled components; everything here is covered by the terms above. (Kimono SEO connects WooCommerce stores via the standard REST API — it ships no WordPress plugin.)

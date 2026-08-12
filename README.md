@@ -68,7 +68,7 @@ Features are grouped below. Most modules are exposed both as UI pages under `/ap
 | UI | React 18, `lucide-react` icons, plain CSS (`global.css`, no Tailwind) |
 | Process manager | PM2 (template in docs) |
 
-> The package name in `package.json` is `business-intelligence-ai` (legacy) — this repository is Kimono SEO.
+> This repository is **Kimono SEO** (the `package.json` name is `kimono-seo`). Its folder may be named `kimono-bi` in some internal references — this does not affect anything.
 
 ---
 
@@ -195,4 +195,4 @@ In short: you may self-host and use it for free, including commercially. **Howev
 
 A **commercial dual-license** is available from Kimono Group for use in closed/proprietary products without the AGPL obligations. See [LICENSING.md](LICENSING.md) and contact **office@kimonogroup.ro**.
 
-The companion WooCommerce connector plugin (`kimono-bi-woo-plugin`) is licensed separately under **GPL-2.0-or-later** (a WordPress requirement).
+WooCommerce stores connect via the standard WooCommerce REST API (consumer key/secret) — no companion plugin is required for Kimono SEO.

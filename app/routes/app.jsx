@@ -6,7 +6,10 @@ import { gateCurrentRoute } from "../lib/plan-gate.server.js";
 /* ── loader (unchanged) ─────────────────────────────────── */
 export const loader = async ({ request }) => {
   const { user, connection, store } = await requireAuth(request);
-  if (connection?.shopDomain) {
+  // Plan gating is OFF by default for self-hosted deployments: no billing is wired
+  // and there is no /app/billing route, so gating would make most modules unreachable.
+  // Set ENABLE_PLAN_GATING=true only if you have wired up your own plans/billing.
+  if (connection?.shopDomain && process.env.ENABLE_PLAN_GATING === "true") {
     await gateCurrentRoute(request, connection.shopDomain);
   }
   return {

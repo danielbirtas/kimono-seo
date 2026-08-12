@@ -8,9 +8,9 @@ Every claim here is traceable to the source under `app/`, `prisma/`, and `script
 For setup and tuning see [INSTALLATION.md](INSTALLATION.md) and
 [CONFIGURATION.md](CONFIGURATION.md); for the HTTP surface see [API.md](API.md).
 
-> **Naming note.** The `package.json` `name` field is `business-intelligence-ai`
-> (shared lineage with a sibling app). The product is *Kimono SEO*; the repo folder is
-> `kimono-bi`.
+> **Naming note.** The product and the `package.json` `name` field are both
+> *Kimono SEO* (`kimono-seo`). The repo folder is referred to as `kimono-bi` in
+> some internal references.
 
 ---
 

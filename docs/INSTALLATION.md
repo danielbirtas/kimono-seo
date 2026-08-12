@@ -55,13 +55,12 @@ sudo apt-get install -y \
 ## 2. Get the code
 
 ```bash
-git clone https://github.com/YOUR-ORG/kimono-seo.git
+git clone https://github.com/danielbirtas/kimono-seo.git
 cd kimono-seo
 ```
 
-> The repository folder is referred to as `kimono-bi` in some internal files,
-> and the `package.json` name is `business-intelligence-ai` (legacy). These
-> names do not affect installation.
+> The repository folder is referred to as `kimono-bi` in some internal files.
+> The `package.json` name is `kimono-seo`. These names do not affect installation.
 
 ---
 

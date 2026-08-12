@@ -5,10 +5,9 @@ import { useLoaderData } from "react-router";
 import prisma from "../db.server.js";
 import { exchangeGa4Code, listGa4Properties, saveGa4Tokens } from "../lib/seo/ga4-traffic.server.js";
 
-function getAppBaseUrl(shopDomain) {
-  const shopSlug = shopDomain.replace(".myshopify.com", "");
-  const handle   = process.env.SHOPIFY_APP_HANDLE || "kimono-ultimate-seo";
-  return `https://admin.shopify.com/store/${shopSlug}/apps/${handle}`;
+function getAppBaseUrl() {
+  // Self-hosted: return the app's own base URL (mirrors gsc-callback.jsx).
+  return process.env.APP_URL || "http://localhost:3000";
 }
 
 export const loader = async ({ request }) => {

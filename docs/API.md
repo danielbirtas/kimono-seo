@@ -65,7 +65,7 @@ Routes: [`connect-store.jsx`](../app/routes/connect-store.jsx), [`api.shopify-oa
 | GET | `/api/shopify-oauth/install` | Start Shopify OAuth: build the authorize URL, set a random CSRF `state` cookie (5-min), redirect to Shopify. | `?shop=your-store.myshopify.com` (**required**) | public; relies on random `state` cookie for CSRF |
 | GET | `/api/shopify-oauth/callback` | OAuth callback: verify `state` cookie + optional HMAC, exchange `code` for a permanent access token, test it, upsert `StoreConnection`/`Store`, register product webhooks (if logged in) or stash a `shopify_pending` cookie for post-login linking. | `?shop`, `?code`, `?state`, `?hmac` | CSRF `state`-cookie check + optional HMAC-SHA256 (`SHOPIFY_CLIENT_SECRET`); attempts `requireAuth` to attach `userId`, falls back to pending-cookie flow |
 
-> The install/callback redirect URI is currently **hardcoded** in [`api.shopify-oauth.install.jsx`](../app/routes/api.shopify-oauth.install.jsx) to a production host and scopes are hardcoded. Self-hosters must edit `redirectUri` (and register it in the Shopify app) to point at their own domain, e.g. `https://app.example.com/api/shopify-oauth/callback`.
+> The install/callback redirect URI is derived from `APP_URL` (`${APP_URL}/api/shopify-oauth/callback`); only the OAuth **scopes** are hardcoded. Set `APP_URL` to your own domain and register that callback URL as an Allowed redirection URL in the Shopify app, e.g. `https://app.example.com/api/shopify-oauth/callback`.
 
 ### OAuth callbacks for external providers
 

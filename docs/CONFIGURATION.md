@@ -302,6 +302,8 @@ Provides keyword metrics (volume, difficulty, CPC, competition, SERP features, t
 
 ## Bing Webmaster (Microsoft Entra OAuth)
 
+> **Note:** the `/bing-callback` OAuth *callback route* is **not shipped** in this repo, so the full redirect flow will 404. Use the API-key / access-token method (paste the token in the app) instead.
+
 Enables listing sites, URL submission quota, single/batch URL submission, and rank/traffic/query stats via OAuth 2.0. Gated by `isBingConfigured()` — both the client ID and secret must be present.
 
 **Redirect URI the code builds:** `{SHOPIFY_APP_URL}/bing-callback`
@@ -324,6 +326,8 @@ Per-store Bing OAuth tokens are stored in the database (`SeoSetting`, `bing_*` k
 ---
 
 ## Pinterest (API v5 OAuth)
+
+> **Note:** the `/pinterest-callback` OAuth *callback route* is **not shipped** in this repo, so the full redirect flow will 404. Use the access-token method (paste the token in the app) instead.
 
 Enables creating pins/boards, listing boards/pins, reading the user account, and scheduled auto-posting via OAuth 2.0. Gated by `isPinterestConfigured()` — both the client ID and secret must be present.
 
