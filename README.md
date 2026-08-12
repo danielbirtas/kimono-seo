@@ -66,7 +66,7 @@ Features are grouped below. Most modules are exposed both as UI pages under `/ap
 | Email | SMTP via `nodemailer` |
 | Headless rendering | `puppeteer-core` + `@sparticuz/chromium` |
 | UI | React 18, `lucide-react` icons, plain CSS (`global.css`, no Tailwind) |
-| Process manager | PM2 (`ecosystem.config.cjs`) |
+| Process manager | PM2 (template in docs) |
 
 > The package name in `package.json` is `business-intelligence-ai` (legacy) — this repository is Kimono SEO.
 
@@ -126,7 +126,7 @@ npm run build
 npm run start          # serves ./build/server/index.js on PORT (default 3000)
 ```
 
-For local development, use `npm run dev` (see [CONTRIBUTING.md](CONTRIBUTING.md)). For production process management, a PM2 config is provided in `ecosystem.config.cjs`.
+For local development, use `npm run dev` (see [CONTRIBUTING.md](CONTRIBUTING.md)). For production process management, a secret-free PM2 config template is shown in [docs/INSTALLATION.md](docs/INSTALLATION.md) — the repo does **not** ship `ecosystem.config.cjs` (it is git-ignored to keep secrets out).
 
 > **Security note:** change the seeded admin password immediately, and never commit real secrets. Example values in the docs (e.g. `sk-ant-xxxx`, `GOCSPX-xxxx`, `changeme`) are placeholders.
 
@@ -179,7 +179,7 @@ Full walkthrough: **[docs/INSTALL_WITH_CLAUDE_CODE.md](docs/INSTALL_WITH_CLAUDE_
 
 Kimono SEO is free to self-host and use, including commercially, under the terms of AGPL-3.0.
 
-- **Community support (free):** open a [GitHub issue](../../issues). Best-effort, no SLA.
+- **Community support (free):** open a [GitHub issue](https://github.com/danielbirtas/kimono-seo/issues). Best-effort, no SLA.
 - **Paid support & services (from Kimono Group):** priority support with an SLA, installation & upgrade assistance, managed hosting, and custom development. Tiers are described generically in [LICENSING.md](LICENSING.md) — no prices are published here.
 - **Commercial license:** if you want to use Kimono SEO inside a closed/proprietary product without AGPL obligations, a separate commercial license is available. See [LICENSING.md](LICENSING.md).
 

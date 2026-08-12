@@ -25,7 +25,7 @@ self-hosting the app with their **own** API keys and credentials.
 | npm | Bundled with Node | `package-lock.json` is committed; use `npm ci` for reproducible installs. |
 | PostgreSQL | 14 or newer recommended | Prisma 6 datasource (`provider = "postgresql"`). Any reasonably recent PostgreSQL (13+) works; test on 14/15/16. A managed Postgres (SSL) is fine — append `?sslmode=require` to `DATABASE_URL`. |
 | Reverse proxy | Apache **or** nginx | Terminates TLS and proxies to the app port. See [§9](#9-reverse-proxy--tls). |
-| Process manager | PM2 (optional) | Recommended for production. A template `ecosystem.config.cjs` is included. |
+| Process manager | PM2 (optional) | Recommended for production. A secret-free `ecosystem.config.cjs` template is shown in §8.1 — the repo does **not** ship this file. |
 | Build tools | C/C++ toolchain | `bcryptjs` is pure-JS, but native deps may compile during `npm ci`. On Debian/Ubuntu: `apt-get install -y build-essential python3`. |
 | Chromium libs | Shared libraries for headless Chromium | The app uses `puppeteer-core` + `@sparticuz/chromium` for headless rendering. The Chromium binary ships with `@sparticuz/chromium`, but the host still needs its runtime shared libraries. See [§1.1](#11-chromium-runtime-libraries). |
 | OpenSSL | Present on host | Required by Prisma engines. The Docker image installs it explicitly (`apk add openssl`). |
@@ -200,7 +200,7 @@ PORT=8080 npm run start
 
 ### 8.1 Running under PM2 (recommended)
 
-A PM2 config template is included as `ecosystem.config.cjs`. It runs
+This repo does **not** ship `ecosystem.config.cjs` (it is git-ignored to keep secrets out). Create your own from the secret-free template below; it runs
 `@react-router/serve` in cluster mode.
 
 > **SECURITY WARNING — do NOT hardcode secrets in `ecosystem.config.cjs`.**

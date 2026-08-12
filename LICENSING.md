@@ -48,7 +48,7 @@ Kimono SEO follows an **open-core** support model. The software is fully open-so
 
 | Tier | What it includes | How to access |
 | --- | --- | --- |
-| **Community (free)** | Best-effort help via public GitHub issues and discussions. No response-time guarantee. | Open a [GitHub issue](../../issues) |
+| **Community (free)** | Best-effort help via public GitHub issues and discussions. No response-time guarantee. | Open a [GitHub issue](https://github.com/danielbirtas/kimono-seo/issues) |
 | **Priority support / SLA** | Private support channel with agreed response times (SLA), prioritized bug triage. | Contact Kimono Group |
 | **Installation & upgrade assistance** | Hands-on help deploying, configuring env/OAuth integrations, and performing version upgrades and database migrations. | Contact Kimono Group |
 | **Managed hosting** | Kimono Group runs and operates a hosted instance for you. | Contact Kimono Group |

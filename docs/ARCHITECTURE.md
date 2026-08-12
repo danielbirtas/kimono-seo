@@ -487,8 +487,8 @@ external cron.
   guards.
 
 > **Operator responsibilities before exposing publicly:** provide your own secrets via
-> environment variables (never commit them — the shipped `ecosystem.config.cjs` contains
-> placeholder-style inline values that must be replaced), rotate the seeded admin password
+> environment variables (never commit them — `ecosystem.config.cjs` is git-ignored, so keep
+> all secrets in `.env`), rotate the seeded admin password
 > (`ADMIN_PASSWORD`, default is a placeholder), set a strong `CRON_SECRET`
 > (`SESSION_SECRET` is a legacy/no-op var and is not read anywhere), and note that
 > `StoreConnection.accessToken` and provider tokens are stored

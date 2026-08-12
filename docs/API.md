@@ -198,7 +198,7 @@ Routes: [`api.blog.generate.js`](../app/routes/api.blog.generate.js), [`api.blog
 | GET / POST | `/api/llmstxt` | `llms.txt` generator: `generate` / `regenerate_section` / `save_sections` / `restore_history` / `fix_titles` / `ai_recommendations`. | `{ intent, ... }` | `requireAuth` |
 | POST | `/api/indexnow` | IndexNow manual submit: `status` / `submit_products` / `submit_urls`. | `{ intent, urls }` | `requireAuth` |
 
-> Several of these routes have **latent bugs** flagged during the code audit (e.g. `api.blog.banner.js`, `api.blog.recommend.js`, `api.indexnow.js`, and some `api.llmstxt.js` branches reference undefined variables in certain code paths, which would throw at runtime). These are reported, not documented as intended behavior. See [INTERNAL_AUDIT](../INTERNAL_AUDIT.md).
+> Several of these routes have **latent bugs** flagged during the code audit (e.g. `api.blog.banner.js`, `api.blog.recommend.js`, `api.indexnow.js`, and some `api.llmstxt.js` branches reference undefined variables in certain code paths, which would throw at runtime). These are reported here for transparency, not documented as intended behavior, and are tracked as known issues.
 
 ---
 
@@ -359,7 +359,7 @@ The following were flagged during the code audit. They matter to self-hosters an
 
 7. **No per-route plan/role enforcement on the API.** `requireAuth` authenticates the user and resolves their active store, but the `api.*` routes themselves do not re-check plan/role. Feature/plan gating is applied only at the authenticated **UI** layout (`app.jsx` → `gateCurrentRoute`). A logged-in user can therefore call gated `api.*` endpoints directly. `/api/ai-citations` is the exception that also enforces trial limits.
 
-8. **Hardcoded production redirect URI / secrets in the repo.** The Shopify OAuth redirect URI is hardcoded in [`api.shopify-oauth.install.jsx`](../app/routes/api.shopify-oauth.install.jsx), and the shipped `ecosystem.config.cjs` historically embedded real secrets. Self-hosters must set their own domain and provide secrets via environment variables — never commit real values. See [INSTALLATION](./INSTALLATION.md) and [CONFIGURATION](./CONFIGURATION.md).
+8. **Provide production config via environment.** OAuth redirect URIs are derived from `APP_URL` (set it to your own domain), and `ecosystem.config.cjs` is git-ignored so no secrets are committed. Provide all secrets via `.env` — never commit real values. See [INSTALLATION](./INSTALLATION.md) and [CONFIGURATION](./CONFIGURATION.md).
 
 ---
 
