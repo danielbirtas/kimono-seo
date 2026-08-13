@@ -82,7 +82,7 @@ These conventions are observed throughout the existing codebase — please follo
 - **ESM modules** — the project is `"type": "module"`. Use `import`/`export`, not `require`.
 - **Auth & gating** — enforce access with the existing helpers (`requireAuth` for user sessions, `CRON_SECRET` / `X-Cron-Secret` for cron/runner endpoints, and `plan-gate.server.js` for module gating). Do not roll your own.
 - **Styling** — plain CSS (global stylesheet), no Tailwind. Icons come from `lucide-react`.
-- **Linting/formatting** — run `npm run lint` before submitting; ESLint and Prettier configs are in the repo (`.eslintrc.cjs`, `.prettierignore`). Keep `npm run typecheck` clean.
+- **Linting/formatting** — run `npm run lint` before submitting; ESLint and Prettier configs are in the repo (`.eslintrc.cjs`, `.prettierignore`). Note: `npm run lint` and `npm run typecheck` are **advisory** — the codebase predates these gates and still has pre-existing findings, so CI does not block on them. Please don't add *new* lint/type errors; the required CI gate is a clean `npm run build`.
 - **Database changes** go through Prisma migrations (`prisma/schema.prisma` + a generated migration); do not hand-edit the database.
 
 ---
@@ -99,7 +99,7 @@ These conventions are observed throughout the existing codebase — please follo
 
 1. Fork the repository and create a feature branch.
 2. Make focused changes; keep unrelated refactors out of the PR.
-3. Run `npm run lint` and `npm run typecheck`, and verify the app still builds (`npm run build`).
+3. Verify the app still builds (`npm run build`) — this is the gate CI enforces. Optionally run `npm run lint` and `npm run typecheck` (advisory; don't add new findings).
 4. Write a clear PR description: what changed, why, and how to test it. Reference any related issue.
 5. Ensure your **CLA** is signed (see below) — PRs cannot be merged without it.
 
